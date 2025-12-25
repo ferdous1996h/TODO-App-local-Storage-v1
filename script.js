@@ -6,46 +6,54 @@ const ulGrab = document.querySelector('ul');
 localStorage.getItem('track');
 function onMouseMove(event) {
   gradient.style.backgroundImage =
-  'radial-gradient(at ' +
-  event.clientX +
-  'px ' +
-  event.clientY +
-  'px, rgba(159,0,191,.9) 0, #4D4FA7 70%)';
+    'radial-gradient(at ' +
+    event.clientX +
+    'px ' +
+    event.clientY +
+    'px, rgba(159,0,191,.9) 0, #4D4FA7 70%)';
 }
 document.addEventListener('mousemove', onMouseMove);
-let todo = []
-let sum=0
-renderData()
+let todo = [];
+let sum = 0;
+renderData();
 btn.addEventListener('click', () => {
   const tempV = putV.value.trim();
   if (!tempV) return;
   const todoWork = {
     text: tempV,
-    index:sum++
-  }
+    index: sum++,
+    checked: false,
+  };
   todo.push(todoWork);
   taskDisplay(todoWork);
   stLocalStorage();
-})
+  putV.value = '';
+  putV.focus()
+});
 function taskDisplay(task) {
-  const html = `<li data-id="${task.index}"><p>${task.text}</p><a>X</a></li>`;
+  const status = task.checked ? 'done' : '';
+  const html = `<li data-id="${task.index}"><p class=${status}>${task.text}</p><a>X</a></li>`;
   ulGrab.insertAdjacentHTML(`beforeend`, html);
 }
 
 // 📌📌 Event Delegation  Very very important
-ulGrab.addEventListener('click', (e) => {
+ulGrab.addEventListener('click', e => {
   if (e.target.tagName === 'P') {
     e.target.classList.toggle('done');
+
+    const idx = parseInt(e.target.closest('li').dataset.id);
+    const task = todo.find(t => t.index === idx);
+    console.log(idx);
+    task.checked = !task.checked;
   }
   if (e.target.tagName === 'A') {
     const list = e.target.closest('li');
-    const idx=parseInt(list.dataset.id)
-    todo = todo.filter(a => a.index !==idx);
+    const idx = parseInt(list.dataset.id);
+    todo = todo.filter(a => a.index !== idx);
     list.remove();
-    console.log(todo)
   }
   stLocalStorage();
-})
+});
 // 📌📌
 function stLocalStorage() {
   localStorage.setItem('track', JSON.stringify(todo));
@@ -53,9 +61,13 @@ function stLocalStorage() {
 function renderData() {
   const info = localStorage.getItem('track');
   if (info) {
-    todo = JSON.parse(info)
+    todo = JSON.parse(info);
     todo.forEach(element => {
-      taskDisplay(element)
+      taskDisplay(element);
     });
+    if (todo.length > 0) {
+      sum = Math.max(...todo.map(t => t.index)) + 1;
+    }
+    console.log(sum);
   }
 }
